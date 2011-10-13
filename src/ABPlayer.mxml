@@ -1,0 +1,569 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Application xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:local="org.kanoha.video.*" layout="absolute" verticalScrollPolicy="off" horizontalScrollPolicy="off" creationComplete="callLater(init)" x="0" y="0">
+	<mx:Style source="css/style.css" />
+	<mx:Script>
+		<![CDATA[
+			import org.kanoha.net.CommentSender;
+			import mx.graphics.codec.PNGEncoder;
+			import org.kanoha.comment.CommentFilter;
+			import org.kanoha.comment.CommentConfig;
+			import org.kanoha.net.VideoLoader;
+			import org.kanoha.net.CommentLoader;
+			import org.kanoha.comment.CommentManager;
+			import org.kanoha.net.CommentLoader;
+			import mx.effects.Move;
+			import mx.graphics.ImageSnapshot;
+			import org.kanoha.comment.Comment;
+			import mx.controls.Alert;
+			import org.kanoha.events.*;
+			public var cmMgr:CommentManager;
+			public var advCmMgr:CommentManager;
+			public var filterMgr:CommentFilter;
+			public var cmSettings:CommentConfig = new CommentConfig();
+			public var mouseTimeout:int=-1;
+			public var cl:CommentLoader = new CommentLoader("comment.xml");
+			public var cs:CommentSender = new CommentSender("http://127.0.0.1/wp3/wp-admin/admin-ajax.php");
+			public var cmntDisplay:Boolean=true;
+			public var isFullscreen:Boolean = false;
+			public function init():void{
+				//this.ABPSidebar.removeChildAt(1);
+				if(Application.application.parameters.nolist=="true"){
+					toggleSidebar(false);
+				}
+				Application.application.stage.addEventListener(FullScreenEvent.FULL_SCREEN, onFullscreen);
+				ABPVideo.addEventListener(NMEvent.VIDEO_NOT_FOUND,function():void{
+					Alert.show('Video Not found');
+					});
+				ABPVideo.addEventListener(NMEvent.META_LOADED,function(eve:NMEvent):void{
+					ABPCommentform.enabled=true;//Video has been completed!
+					btnPlay.enabled=true;
+					btnStop.enabled=true;
+					infoLblProportions.text = ABPVideo.p_x + " x " + ABPVideo.p_y;
+					ABPVideo.play();
+					ABPVideo.stop();
+					ABPTrack.maximum=ABPVideo.total;
+					});
+				ABPVideo.addEventListener(NMEvent.COMPLETE,function(event:NMEvent):void{
+					ABPTrack.value=0;
+					onPlayheadChange(new NMEvent(NMEvent.PLAY_HEAD_UPDATE,0));
+				});
+				ABPVideo.addEventListener(NMEvent.PROGRESS,function(event:NMEvent):void{
+					//kk
+				});
+				ABPVideo.addEventListener(NMEvent.STATE_CHANGE,onStateChange);
+				this.ABPVideo.addEventListener(NMEvent.PLAY_HEAD_UPDATE,onPlayheadChange);
+				filterMgr = new CommentFilter();
+				cmMgr = new CommentManager(commentStage2,cmSettings,filterMgr,false);
+				advCmMgr = new CommentManager(commentStage1,cmSettings,filterMgr,true);
+				if(Application.application.parameters.vid!=null){
+					loadVideo(Application.application.parameters.mode,Application.application.parameters.vid,Application.application.parameters.comments);
+				}else{
+					//loadVideo("sina","56216390",'http://www.bilibili.tv/dm,56216390');
+					//loadVideo("file","http://localhost/share/2.hlv","http://localhost/share/comment.xml");
+					loadVideo("file","http://localhost/share/rokubunnoichi.flv",'http://localhost/share/rokubunnoichi.xml');
+				}
+				if(Application.application.parameters.send!=null)
+					cs.url = Application.application.parameters.send;
+				cl.addEventListener(LoaderEvent.COMMENT_COMPLETE,onCommentsLoaded);
+				addCallbacks();
+			}
+			public function addCallbacks():void{
+				ExternalInterface.addCallback("load",loadVideo);
+				ExternalInterface.addCallback("seek",seekVideo);
+			}
+			public function seekVideo(seekPosition:int):Boolean{
+				if(ABPVideo.getState() == NSComponent.UNLOAD)
+					return false;//WHAT? Not loaded...
+				return ABPVideo.seek(seekPosition);
+			}
+			public function loadVideo(loadMode:String,video:String,comment:String):int{
+					if(ABPVideo.getState()==NSComponent.PLAY){
+						ABPVideo.stop();
+						cmMgr.clear();
+						cmMgr.reset();
+						advCmMgr.clear();
+						advCmMgr.reset();
+						ABPTrack.value=0;
+					}
+					if(loadMode=="file"){
+						ABPVideo.initBySingleUrl(video);
+						cl.load(comment);
+						cs.vid = video;
+						return 0;
+					}else if(loadMode=="sina" || loadMode=="tudou"){
+						var x:VideoLoader = new VideoLoader();
+						if(loadMode=="tudou"){
+							ABPVideo.allowCapture = false;//not for tudou
+						}
+						x.addEventListener(LoaderEvent.VIDEO_COMPLETE,function(e:LoaderEvent):void{
+							var o:Object = e.info;
+							ABPVideo.init(o.video,o.duration);
+							ABPTrack.maximum = ABPVideo.total;
+						});
+						x.load(loadMode,video);
+						cs.vid = video;
+						cl.load(comment);
+						return 0;
+					}
+					return -1;
+			}
+			/****** Event Handlers ******/
+			public function onCommentsLoaded(eve:LoaderEvent):void{
+				var t:Array = eve.info;
+				cmMgr.provider = t;
+				advCmMgr.provider = t;
+				UICommentList = new ArrayCollection(t);
+			}
+			public function onPlayheadChange(eve:NMEvent):void{
+				var time:int = Number(eve.info);
+				var total:int = Number(ABPVideo.total/1000);
+				var tmin:int = Math.floor(total/60);
+				var tsec:int = Math.floor(total%60);
+				var min:int = Math.floor((time/1000)/60);
+				var sec:int = Math.floor(time/1000)%60;
+				if(min<10){
+					currentTime.text="0";
+				}else{
+					currentTime.text="";
+				}
+				currentTime.text+=min + ":";
+				if(sec<10){
+					currentTime.text+="0";
+				}
+				currentTime.text+=sec + " / ";
+				if(tmin<10)
+					currentTime.text += "0";
+				currentTime.text+=tmin +":";
+				if(tsec<10)
+					currentTime.text+="0";
+				currentTime.text+=tsec;
+				if(ABPTrack.maximum >= time && updatePosition)
+					ABPTrack.value = time;
+				if(cmntDisplay){
+					this.cmMgr.time(Math.floor(time));
+					this.advCmMgr.time(Math.floor(time));
+				}
+			}
+			public function onCommentTypeChange():void{
+				if(CmntType.value=="7" || CmntType.value=="8"){
+					toggleSidebar(true);
+					frmSpecial.enabled=true;
+					ABPSidebar.selectedIndex = 1;
+					if(CmntType.value=="7"){
+						AdvHRule.visible=true;
+						AdvVRule.visible=true;
+						AdvHRule.width = ABPVideo.video.width;
+						AdvVRule.height= ABPVideo.video.height;
+					}else if(CmntType.value=="8"){
+						
+					}
+				}else{
+					if(AdvHRule.visible || AdvVRule.visible){
+						AdvHRule.visible = false;
+						AdvVRule.visible = false;
+					}
+					if(frmSpecial.enabled){
+						frmSpecial.enabled=false;
+						ABPSidebar.selectedIndex = 0;
+					}
+				}
+			}
+			public function onCommentformKey(event:KeyboardEvent):void{
+				if(event.keyCode==13 && !event.ctrlKey){
+					cmntSend();
+				}else if(event.keyCode==13 && event.ctrlKey){
+					CmntText.text+="/n";
+				}
+			}
+			public function onStateChange(eve:NMEvent):void{
+				if(eve.info=="pause" || eve.info == "stop"){
+					btnPlay.styleName="playBtn";
+				}else if(eve.info=="play"){
+					btnPlay.styleName="pauseBtn";
+				}
+			}
+			public function onListDblClick(event:MouseEvent):void{
+				if(ABPVideo.getState() == NSComponent.PLAY){
+					ABPVideo.seek(int(CommentListGrid.selectedItem.stime));
+					cmMgr.clear();
+				}
+			}
+			public function onMouseMove(event:MouseEvent):void{
+            	if(!ABPController.visible){
+            		ABPController.visible=true;
+            		Mouse.show();
+            		mouseTimeout = setTimeout(function ():void{
+            			Mouse.hide();
+            			ABPController.visible=false;
+            			toggleSidebar(false);
+            		},5000);
+            	}else{
+            		if(mouseTimeout!=-1)
+            			clearTimeout(mouseTimeout);
+            		mouseTimeout = setTimeout(function ():void{
+            			Mouse.hide();
+            			ABPController.visible=false;
+            			toggleSidebar(false);
+            		},5000);
+            	}
+            }
+			private function onFullscreen(evt:FullScreenEvent):void{
+				isFullscreen=evt.fullScreen;
+				if(isFullscreen){
+					toggleSidebar(false);
+					btnFullScreen.styleName="ssBtn";
+					ABPCommentform.visible=false;
+					ABPVideoWrapper.setConstraintValue("bottom",0);
+					ABPVideoWrapper.invalidateSize();
+					stage.addEventListener(MouseEvent.MOUSE_MOVE,onMouseMove);
+				}else{
+					ABPCommentform.visible=true;
+					btnFullScreen.styleName="fsBtn";
+					ABPVideoWrapper.setConstraintValue("bottom",ABPController.height + ABPCommentform.height);
+					ABPVideoWrapper.invalidateSize();
+					stage.removeEventListener(MouseEvent.MOUSE_MOVE,onMouseMove);
+					if(mouseTimeout!=-1){
+						clearTimeout(mouseTimeout);
+						Mouse.show();
+						ABPController.visible=true;
+					}
+				}
+			}
+			private function commentAvoidAction(evt:Object):void{
+				commentStage2.setConstraintValue("bottom",(ABPVideo.height - ABPVideo.video.height) + 30);
+				commentStage2.invalidateSize();
+			}
+			/****** RUNNERS *******/
+			public function cmntSend():void{
+				if(CmntText.text!=""){
+					/**** Process Commands Entered ****/
+					if(CmntText.text=="::ScreenCapture"){
+						if(ABPVideo.allowCapture){
+							try{
+								if(this.ABPVideo.getState()==NSComponent.PLAY){
+									togglePlay();//Pause this
+								}
+								var image:ImageSnapshot = ImageSnapshot.captureImage(ABPVideoWrapper,150,new PNGEncoder());
+								var file:FileReference = new FileReference();
+								file.save(image.data,"screencap-" + ABPVideo.time + ".png");
+							}catch(e:Error){
+								//Seriously, ignore this
+							}
+						}//I see we don't have a chance
+						CmntText.text="";
+						return;
+					}else if(CmntText.text=="Bili::给爷全屏"){
+						toggleFullscreen(true);
+						CmntText.text="";
+						return;
+					}else if(CmntText.text=="Bili::要看黑白电视"){
+						ABPVideo.filterMode = "blackwhite";
+						if(videoFilter!=null){
+							videoFilter.selectedIndex=2;
+						}
+						CmntText.text="";
+						return;
+					}else if(CmntText.text=="Bili::还是看彩色电视吧"){
+						ABPVideo.filterMode = "default";
+						videoFilter.selectedIndex=0;
+						CmntText.text="";
+						return;
+					}else if(CmntText.text=="::CPUFriendly"){
+						cfgCPUfriendly.selected = true;
+						toggleCPUMode();
+						CmntText.text="";
+						return;
+					}else if(CmntText.text=="::ReloadComments"){
+						cl.reload();
+						CmntText.text="";
+						return;
+					}else if(CmntText.text=="::ClearStage"){
+						cmMgr.clearContainer();
+						advCmMgr.clearContainer();
+						CmntText.text="";
+						return;
+					}
+					/**** End Commands ****/
+					var n:Object = {stime:ABPVideo.time + 2,text:CmntText.text,size:int(CmntSize.value),color:CmntColor.value,mode:uint(CmntType.value),border:true,date:new Date()};
+					if(n.mode<6){
+						cmMgr.insert(n);
+					}else{
+						advCmMgr.insert(n);
+					}
+					UICommentList.refresh();
+					CmntText.text = "";
+					cs.send(n);
+				}
+			}
+			public function runCmntPos():void{
+				return;//not implemented
+			}
+			public function deleteFilter():void{
+				if(lstRule.selectedIndex >= 0 && filterMgr.removeFilter(  String( UIFilterList.getItemAt(lstRule.selectedIndex) )  )>=0 ){
+					UIFilterList.removeItemAt(lstRule.selectedIndex);
+				}
+				if(UIFilterList.length==0){
+					filterMgr.clear();
+				}
+				return;
+			}
+			/****** TOGGLERS ******/
+			public function togglePlay():void{
+				if(this.ABPVideo.getState()!=NSComponent.PLAY){
+					this.ABPVideo.play();
+					cmMgr.resume();
+					advCmMgr.resume();
+					btnPlay.styleName="pauseBtn";
+				}else{
+					this.ABPVideo.pause();
+					cmMgr.pause();
+					advCmMgr.pause();
+					btnPlay.styleName="playBtn";
+				}
+			}
+			public function toggleCmnt():void{
+				if(cmntDisplay){
+					btnCmnt.styleName="cmntOff";
+				}else{
+					btnCmnt.styleName="cmntOn";
+				}
+				cmntDisplay = !cmntDisplay;
+				cmMgr.clear();
+				advCmMgr.clear();
+			}
+			public function toggleSidebar(state:Boolean):void{
+				//save status
+				if(sidebarOverlay.visible==state){
+					return;//Skip
+				}
+				if(!state){
+					sidebarOverlay.visible=false;
+					ABPCommentform.setConstraintValue("right",0);
+					ABPVideoWrapper.setConstraintValue("right",0);
+					btnConfig.styleName="cfgBtn";
+				}else{
+					sidebarOverlay.visible=true;
+					ABPCommentform.setConstraintValue("right",sidebarOverlay.width);
+					ABPVideoWrapper.setConstraintValue("right",sidebarOverlay.width);
+					btnConfig.styleName="cfgSBtn";
+				}
+			}
+			public function toggleFullscreen(state:Boolean):void{
+				if(isFullscreen == state){
+					return;//already is
+				}else{
+					if(state==true){
+						try {
+							Application.application.stage.displayState = StageDisplayState.FULL_SCREEN;
+							isFullscreen = state;
+						} catch (err:SecurityError) {
+							// ignore
+						}
+					}else{
+						try{
+						Application.application.stage.displayState = StageDisplayState.NORMAL;
+						isFullscreen = state;
+						}catch(e:SecurityError){
+							//ignore
+						}
+					}
+				}
+			}
+			public function toggleCPUMode():void{
+				cmMgr.cpufriendly = cfgCPUfriendly.selected;
+				advCmMgr.cpufriendly = cfgCPUfriendly.selected;
+			}
+			public function toggleHardSubtitle():void{
+				if(!cfgAvoidSubs.selected){
+					commentStage2.setConstraintValue("bottom",0);
+					ABPVideo.removeEventListener(Event.RESIZE,commentAvoidAction);
+				}else{
+					var bottom:int = (ABPVideo.height - ABPVideo.video.height) + 30;
+					commentStage2.setConstraintValue("bottom",bottom);
+					ABPVideo.addEventListener(Event.RESIZE,commentAvoidAction);
+				}
+				commentStage2.invalidateSize();//Refresh display
+			}
+			/****** Formatters ******/
+			private function formatTime(item:Object, column:DataGridColumn):String{
+         	    var seconds:int = (int)(Number(item.stime) / 1000 );
+         	    var minutes:int = (int)(seconds / 60);
+         	    var seconds_:int = (int)(seconds%60);
+         	    var output:String="";
+         	    if(seconds_>9)
+                	output=minutes + ":" + seconds_;
+                else
+                	output=minutes + ":0" + seconds_;
+                return output;
+			}
+			private function formatDataTip(item:Number):String {
+				item = Math.round(item/1000);
+         	    var minutes:int = (int)(item / 60);
+         	    var seconds:int = (int)(item % 60);
+         	    if(seconds>9)
+                	return String(minutes + ":" + seconds);
+                else
+                	return String(minutes + ":0" + seconds);
+         	}
+			private function formatDate(item:Object, column:DataGridColumn):String{
+         	    return formatDateTime.format(item.date);
+			}
+		]]>
+	</mx:Script>
+	<mx:DateFormatter id="formatDateTime" formatString="YYYY-MM-DD J:NN:SS" />
+	<mx:ArrayCollection id="UICommentList">
+	</mx:ArrayCollection>
+	<mx:ArrayCollection id="UIFilterList">
+	</mx:ArrayCollection>
+	<mx:Boolean id="sidebarShow">true</mx:Boolean>
+	<mx:Boolean id="updatePosition">true</mx:Boolean>
+	<mx:Canvas verticalScrollPolicy="off" horizontalScrollPolicy="off" top="0" left="0" bottom="70" right="300" id="ABPVideoWrapper" click="togglePlay();" styleName="videoWrapper">
+		<local:NSComponent id="ABPVideo" top="0" left="0" bottom="0" right="0" smoothing="true"/>	
+		<mx:Canvas verticalScrollPolicy="off" horizontalScrollPolicy="off" id="commentStage1" top="0" left="0" right="0" bottom="0"/>
+		<mx:Canvas verticalScrollPolicy="off" horizontalScrollPolicy="off" id="commentStage2" top="0" left="0" right="0" bottom="0"/>
+		<mx:HRule id="AdvHRule" visible="false" width="100%" height="1" strokeColor="#1FF91F" horizontalCenter="0" verticalCenter="0"/>
+		<mx:VRule id="AdvVRule" visible="false" horizontalCenter="0" verticalCenter="0"  height="100%" width="1" strokeColor="#1FF91F"/>
+		<mx:Canvas id="ABPVideoInfo" verticalScrollPolicy="off" horizontalScrollPolicy="off" top="30" left="30" right="30" backgroundAlpha = "0.8" backgroundColor="#111111" height="81" visible="false">
+			<mx:Label text="视频解析度" color="#FFFFFF" left="10" top="10"/>
+			<mx:Label text="0 x 0" color="#FFFFFF" left="83" top="10" right="10" id="infoLblProportions"/>
+			<mx:Label text="当前视频文件大小" color="#FFFFFF" top="41" left="10"/>
+			<mx:Label text="0 bytes" color="#FFFFFF" left="119" top="41" right="10" id="infoLblFilesize"/>
+		</mx:Canvas>
+	</mx:Canvas>
+	<mx:Canvas verticalScrollPolicy="off" horizontalScrollPolicy="off" height="40" bottom="0" left="0" right="0" id="ABPController" backgroundColor="#000000">
+		<mx:Button id="btnPlay" enabled="false" left="0" bottom="0" styleName="playBtn" click="togglePlay();" toolTip="播放/暂停"/>
+		<mx:Button id="btnStop" enabled="false" styleName="stopBtn" left="50" bottom="0" click="this.ABPVideo.stop();" toolTip="停止"/>
+		<mx:Button id="btnFullScreen" click="toggleFullscreen(!isFullscreen);" styleName="fsBtn" right="0" bottom="0" toolTip="全屏幕"/>
+		<mx:Button id="btnConfig" styleName="cfgSBtn" right="30" bottom="0" click="toggleSidebar(!sidebarOverlay.visible);" toolTip="设置弹幕"/>
+		<mx:Canvas height="25" left="80" right="120" bottom="0" styleName="Bar">
+			<mx:Label id="currentTime" text="00:00 / 00:00" verticalCenter="0" left="5" color="#FFFFFF"/>
+		</mx:Canvas>
+		<mx:Button id="btnVolume" styleName="volume" right="60" bottom="0" toolTip="音量"/>
+		<mx:Button id="btnCmnt" click="toggleCmnt();" styleName="cmntOn" right="90" bottom="0" toolTip="开启/关闭弹幕"/>
+		<mx:HSlider id="ABPTrack" dataTipFormatFunction="formatDataTip" showTrackHighlight="true" trackColors="[haloOrange]" left="10" top="0" right="10" height="10" styleName="videoTracker" mouseDown="updatePosition=false" mouseUp="ABPVideo.seek(ABPTrack.value);updatePosition=true;"/>
+	</mx:Canvas>
+	<mx:Canvas id="sidebarOverlay" top="0" bottom="40" right="0" width="300" backgroundColor="#000">
+		<mx:TabNavigator top="0" bottom="0" right="0" left="0" id="ABPSidebar">
+			<mx:Canvas verticalScrollPolicy="off" horizontalScrollPolicy="off" label="评论列表" width="100%" height="100%" id="frmCmntList">
+				<mx:DataGrid id="CommentListGrid" left="0" top="0" bottom="0" right="0" dataProvider="{UICommentList}" doubleClick="onListDblClick(event);" doubleClickEnabled="true">
+					<mx:columns>
+				        <mx:DataGridColumn headerText="时间" dataField="stime" width="40" labelFunction="formatTime"/>
+				        <mx:DataGridColumn headerText="内容" dataField="text" />
+				        <mx:DataGridColumn headerText="发送时间" dataField="date" width="100" labelFunction="formatDate" />
+				    </mx:columns>
+				</mx:DataGrid>
+			</mx:Canvas>
+			<mx:Canvas id="frmSpecial" label="高级弹幕" width="100%" height="100%" enabled="false">
+				<mx:Accordion top="0" bottom="0" right="0" left="0" id="AdvancedCmnt" selectedIndex="0">
+					<mx:Canvas label="定位弹幕" width="100%" height="100%" id="CmntAdvPosition">
+						
+					</mx:Canvas>
+					<mx:Canvas label="绘图弹幕" width="100%" height="100%">
+						<mx:Label text="脚本绘图" left="10" top="6"/>
+						<mx:TextArea left="10" top="31" right="10" id="CmntAdvDraw" text="//这里是脚本" editable="true" wordWrap="false" enabled="true" bottom="43"/>
+						<mx:Button label="测试运行" id="CmntAdvTest" right="10" bottom="8"/>
+					</mx:Canvas>
+					<mx:Canvas label="点阵图片弹幕" width="100%" height="100%">
+						<mx:Label text="图片预览" left="10" top="10"/>
+						<mx:Image left="10" top="41" bottom="28" right="118" id="CmntAdvImage" scaleContent="false" autoLoad="false"/>
+						<mx:Label text="信息" right="10" top="41" width="43" textAlign="right"/>
+						<mx:Label text="0 x 0 视觉比例" right="10" top="72" textAlign="right"/>
+						<mx:Label text="X:0 Y:0" width="85" right="10" top="103" textAlign="right"/>
+					</mx:Canvas>
+				</mx:Accordion>
+			</mx:Canvas>
+			<mx:Canvas verticalScrollPolicy="off" horizontalScrollPolicy="off" label="设置" width="100%" height="100%" id="frmSettings">
+				<mx:Accordion left="0" top="0" bottom="0" right="0">
+					<mx:Canvas label="播放器设置" width="100%" height="100%">
+						<mx:HSlider id="CmntTransparency" left="10" top="30" right="10" minimum="0.0" maximum="1.0" snapInterval="0.1" enabled="true" allowTrackClick="true" value="1.0" change="cmSettings.setStyle('alpha',CmntTransparency.value);"/>
+						<mx:Label text="弹幕透明度" left="10" top="10"/>
+						<mx:CheckBox label="显示视频调试信息" id="abpToggleDebug" left="10" top="56" click="ABPVideoInfo.visible =abpToggleDebug.selected;"/>
+						<mx:ComboBox left="71" top="87" right="10" id="CmntFont" selectedIndex="2" editable="false" enabled="true" change="cmSettings.setStyle('font',CmntFont.value);">
+							<mx:ArrayCollection>
+								<mx:Object label="黑体" data="simhei"/>
+						        <mx:Object label="微软雅黑" data="Microsoft Yahei"/>
+						        <mx:Object label="宋体" data="宋体"/>
+						    </mx:ArrayCollection>
+						</mx:ComboBox>
+						<mx:Label text="弹幕字体" left="10" top="89"/>
+						<mx:Button label="重新载入弹幕列表" right="10" top="56" id="btnReloadComments" click="cl.reload();" toolTip="强制重新载入所有弹幕"/>
+						<mx:CheckBox label="弹幕加粗" id="CmntBold" selected="true" enabled="true" left="10" top="120" click="cmSettings.setStyle('bold',CmntBold.selected);"/>
+						<mx:RadioButtonGroup id="CmntExtra" change="cmSettings.setGlow(String(CmntExtra.selectedValue));" />
+						<mx:RadioButton label="文字阴影" selected="false" id="CmntGlow" groupName="CmntExtra" left="91" top="120" value="highlight"/>
+						<mx:RadioButton label="文字描边" groupName="CmntExtra" id="CmntShadow" left="172" top="120" value="border" selected="true"/>
+						<mx:RadioButton label="无" id="CmntNone" groupName="CmntExtra" left="253" top="120" value="none"/>
+						<mx:CheckBox label="请对CPU善良些" left="10" top="155" id="cfgCPUfriendly" toolTip="限制同时显示的弹幕数目" click="toggleCPUMode();"/>
+						<mx:CheckBox label="躲开内嵌字幕" left="127" top="155" id="cfgAvoidSubs" toolTip="视频底部向上30像素内弹幕绕行通过" click="toggleHardSubtitle();"/>
+						<mx:CheckBox label="显示视频" selected="true" id="showVideo" left="10" top="190" click="ABPVideo.visible=showVideo.selected;" toolTip="关闭视频部分，减少处理器压力"/>
+						<mx:ComboBox right="10" left="91" top="189" id="videoFilter" editable="false" enabled="true" selectedIndex="0" change="ABPVideo.filterMode=String(videoFilter.value);">
+							<mx:ArrayCollection>
+								<mx:Object label="无优化" data="default"/>
+						        <mx:Object label="增加对比度" data="contrastup"/>
+						        <mx:Object label="黑白影像" data="blackwhite"/>
+						        <mx:Object label="增大亮度" data="brighter"/>
+						        <mx:Object label="只有红色" data="redchannel"/>
+						        <mx:Object label="只有绿色" data="greenchannel"/>
+						        <mx:Object label="只有蓝色" data="bluechannel"/>
+						    </mx:ArrayCollection>
+						</mx:ComboBox>
+						<mx:CheckBox label="高画质" left="232" top="155" id="videoQuality" selected="true" click="ABPVideo.smoothing = videoQuality.selected;" toolTip="一些高清视频关闭高画质可以减少处理器负荷同时提高画质"/>
+					</mx:Canvas>
+					<mx:Canvas label="屏蔽设置" width="100%" height="100%">
+						<mx:CheckBox label="滚动弹幕" selected="true" enabled="true" id="CmntShowScroll" left="10" top="10" click="filterMgr.filterMode(1,CmntShowScroll.selected);"/>
+						<mx:CheckBox label="逆向弹幕" id="CmntShowReverse" selected="true" enabled="true" left="10" top="29" click="filterMgr.filterMode(6,CmntShowReverse.selected);"/>
+						<mx:CheckBox label="顶部弹幕" id="CmntShowTop" selected="true" enabled="true" horizontalCenter="0" top="10" click="filterMgr.filterMode(5,CmntShowTop.selected);"/>
+						<mx:CheckBox label="底部弹幕" id="CmntShowBottom" selected="true" enabled="true" horizontalCenter="0" top="29" click="filterMgr.filterMode(4,CmntShowBottom.selected);"/>
+						<mx:CheckBox label="字幕弹幕" id="CmntShowCaptioning" selected="true" enabled="true" right="10" top="10" click="filterMgr.filterMode(8,CmntShowCaptioning.selected);"/>
+						<mx:CheckBox label="定位弹幕" id="CmntShowPositioned" selected="true" right="10" top="30" click="filterMgr.filterMode(7,CmntShowPositioned.selected);"/>
+						<mx:HRule top="59" right="10" left="10"/>
+						<mx:CheckBox label="使用远程载入规则" left="10" top="69" id="CmntFilterRemote" selected="true" enabled="true"/>
+						<mx:TextInput id="filterDef" left="10" top="104" right="123"/>
+						<mx:Button label="添加" right="65" top="104" id="btnAddRule" click="if(filterMgr.addFilter(filterDef.text)>=0){UIFilterList.addItem(filterDef.text)};"/>
+						<mx:Button label="删除" id="btnDelRule" right="7" top="104" click="deleteFilter();"/>
+						<mx:List id="lstRule" left="11" dataProvider="{UIFilterList}" top="139" right="10" bottom="33" selectedIndex="0"></mx:List>
+						<mx:Button label="保存过滤器规则" id="btnSaveFilter" right="10" top="69"/>
+						<mx:CheckBox label="智能阻止刷屏" bottom="0" left="11" id="CmntAutoblock"/>
+					</mx:Canvas>
+					<mx:Canvas label="关于播放器" width="100%" height="100%">
+						<mx:Label text="ABPlayer 弹幕播放器" left="10" top="10" right="10" fontWeight="bold" textDecoration="underline"/>
+						<mx:Label text="版本：0.9.57 (Kotori Build)" left="10" top="32" right="10"/>
+						<mx:Label text="作者：Jabbany (CQZ) @ Kanoha.org" left="10" top="53" right="10"/>
+					</mx:Canvas>
+				</mx:Accordion>
+			</mx:Canvas>
+			<mx:Canvas verticalScrollPolicy="off" horizontalScrollPolicy="off" label="播放列表" width="100%" height="100%" id="frmPlaylist">
+				<mx:Accordion left="0" top="0" bottom="0" right="0">
+					<mx:Canvas label="视频分P列表" width="100%" height="100%" id="PartList">
+						<mx:List left="0" top="0" bottom="0" right="0"></mx:List>
+					</mx:Canvas>
+					<mx:Canvas label="相关视频" width="100%" height="100%">
+						<mx:TileList left="0" top="0" bottom="0" right="0"></mx:TileList>
+					</mx:Canvas>
+				</mx:Accordion>
+			</mx:Canvas>
+		</mx:TabNavigator>
+	</mx:Canvas>
+	<mx:Canvas enabled="false" verticalScrollPolicy="off" horizontalScrollPolicy="off" height="30" left="0" bottom="40" right="300" id="ABPCommentform" borderStyle="none" styleName="Bar">
+		<mx:Button click="cmntSend();" label="发送..." id="CmntSend" right="4" width="63" height="25" verticalCenter="0" styleName="dmButton"/>
+		<mx:ComboBox left="4" width="96" change="onCommentTypeChange();" id="CmntType" selectedIndex="0" editable="false" enabled="true" height="25" verticalCenter="0" fillAlphas="[0.4, 0.4, 0.4, 0.4]" fillColors="[#FFFFFF, #FFFFFF]" cornerRadius="0" styleName="dmCombo">
+			<mx:ArrayCollection>
+				<mx:Object label="滚动" data="1"/>
+		        <mx:Object label="顶部" data="5"/>
+		        <mx:Object label="底部" data="4"/>
+		        <mx:Object label="逆向" data="6"/>
+		        <mx:Object label="字幕" data="8"/>
+		        <mx:Object label="定位" data="7"/>
+		    </mx:ArrayCollection>
+		</mx:ComboBox>
+		<mx:ColorPicker id="CmntColor" left="104" height="25" verticalCenter="0" width="25" selectedColor="#FFFFFF" enabled="true"/>
+		<mx:TextInput keyDown="onCommentformKey(event);" left="200" right="70" id="CmntText" height="25" verticalCenter="0"/>
+		<mx:ComboBox width="62" id="CmntSize" editable="false" selectedIndex="2" enabled="true" left="134" height="25" verticalCenter="0" styleName="dmCombo">
+			<mx:ArrayCollection>
+				<mx:Object label="特大" data="35"/>
+		        <mx:Object label="大" data="30"/>
+		        <mx:Object label="中" data="25"/>
+		        <mx:Object label="小" data="16"/>
+		    </mx:ArrayCollection>
+		</mx:ComboBox>
+	</mx:Canvas>
+</mx:Application>
