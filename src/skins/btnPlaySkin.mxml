@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:SparkButtonSkin xmlns:fx="http://ns.adobe.com/mxml/2009" 
+             xmlns:s="library://ns.adobe.com/flex/spark" width="50" height="25">
+     
+    <fx:Metadata>
+        <![CDATA[ 
+        /** 
+         * @copy spark.skins.spark.ApplicationSkin#hostComponent
+         */
+        [HostComponent("spark.components.Button")]
+        ]]>
+    </fx:Metadata>
+    <!-- states -->
+    <s:states>
+        <s:State name="up" />
+        <s:State name="over" />
+        <s:State name="down" />
+        <s:State name="disabled" />
+    </s:states>
+    
+	<s:BitmapImage left="0" right="0" top="0" bottom="0" source="@Embed(source='assets/btn_play_up.png')" includeIn="up" />
+	<s:BitmapImage left="0" right="0" top="0" bottom="0" source="@Embed(source='assets/btn_play_down.png')" includeIn="over" />
+	<s:BitmapImage left="0" right="0" top="0" bottom="0" source="@Embed(source='assets/btn_play_down.png')" includeIn="down" />
+	<s:BitmapImage left="0" right="0" top="0" bottom="0" source="@Embed(source='assets/btn_play_down.png')" includeIn="disabled" />
+</s:SparkButtonSkin>

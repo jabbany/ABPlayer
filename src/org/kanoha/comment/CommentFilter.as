@@ -10,11 +10,11 @@ package org.kanoha.comment
 		public function clear():void{
 			this.filters = new Array();//deleted all filters
 		}
-		public function addFilter(filter:String):Number{
+		public function addFilter(filter:String):Object{
 			//Parse this
 			var entities:Array = filter.split(" ",3);
 			if(entities.length<3)
-				return -1;//Not enough parameters
+				return {id:-1};//Not enough parameters
 			var entMode:Array = String(entities[0]).split(".",2);
 			var id:int=0;
 			switch(entMode[0]){
@@ -24,7 +24,7 @@ package org.kanoha.comment
 				case 'P':id=7;break;
 				case 'R':id=6;break;
 				case '*':id=0;break;
-				default:return -2;//Undefined entity mode
+				default:return {id:-2};//Undefined entity mode
 			}
 			if(filters[id]==null){
 				filters[id]=new Array();
@@ -35,7 +35,16 @@ package org.kanoha.comment
 					objFilter.p=int(objFilter.p);
 				}
 			filters[id].push(objFilter);
-			return filters[id].length - 1;
+			return {id:(filters[id].length - 1),mode:id};
+		}
+		public function removeFilterAt(id:int,mode:int=0):Boolean{
+			try{
+				filters[mode].splice(id,1);
+			}catch(e:Error){
+				//do nothing
+				return false;
+			}
+			return true;
 		}
 		public function removeFilter(filter:String):Number{
 			//Parse this

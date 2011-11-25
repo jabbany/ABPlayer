@@ -1,135 +1,80 @@
 /* CSS file */
-Button{
+@namespace s "library://ns.adobe.com/flex/spark";
+@namespace mx "library://ns.adobe.com/flex/mx";
+mx|TabNavigator{
+	paddingTop:0;
+	border:0;
+}
+s|Button{
 	font-family: "Microsoft Yahei","Heiti","黑体","宋体",Helvetica,Arial;
 	color: #000;
 	font-size: 12px;
 	font-weight: normal;
 }
-CheckBox{
+s|CheckBox{
 	font-family: "Microsoft Yahei","Heiti","黑体","宋体",Helvetica,Arial;
 	color: #000;
 	font-size: 12px;
 	font-weight: normal;
 }
-TextInput{
+s|TextInput{
 	font-family: "Microsoft Yahei","Heiti","黑体","宋体",Helvetica,Arial;
 	color: #000;
 	font-size: 12px;
 	font-weight: normal;
 }
-Label{
+s|Label{
 	font-family: "Microsoft Yahei","Heiti","黑体","宋体",Helvetica,Arial;
 	color: #000;
 	font-size: 12px;
 	font-weight: normal;
 }
-DataGrid{
+s|DataGrid{
 	font-family: "Microsoft Yahei","Heiti","黑体","宋体",Helvetica,Arial;
 	font-size:11px;
 }
-ComboBox{
+s|DataGrid s|Label{
 	font-family: "Microsoft Yahei","Heiti","黑体","宋体",Helvetica,Arial;
 	color: #000;
 	font-size: 12px;
 	font-weight: normal;
 }
-HSlider.videoTracker{
-	thumbUpSkin: Embed("../assets/trackerThumb.png");
-	thumbDownSkin: Embed("../assets/trackerThumbDown.png");
-	thumbOverSkin: Embed("../assets/trackerThumbDown.png");
-	/*
-	showTrackHighlight:true;
-	dataTipPlacement: right;
-	dataTipOffset: 0;
-	*/
-}
-Canvas.videoWrapper{
+mx|Canvas.videoWrapper{
 	backgroundColor:#000;
 }
-ComboBox.dmCombo{
-	font-family: "Microsoft Yahei","Heiti","黑体","宋体",Helvetica,Arial;
-	color: #000;
-	font-size: 12px;
-	font-weight: normal;
-	cornerRadius:0;
+s|Button.playBtn{
+	skinClass: ClassReference("skins.btnPlaySkin");
 }
-Button.playBtn{
-	upSkin: Embed("../assets/btn_play_up.png");
-	downSkin: Embed("../assets/btn_play_down.png");
-	overSkin: Embed("../assets/btn_play_down.png");
-	disabledSkin: Embed("../assets/btn_play_up.png");
+s|Button.pauseBtn{
+	skinClass: ClassReference("skins.btnPauseSkin");
 }
-Button.pauseBtn{
-	upSkin: Embed("../assets/btn_pause_up.png");
-	downSkin: Embed("../assets/btn_pause_down.png");
-	overSkin: Embed("../assets/btn_pause_down.png");
+s|Button.stopBtn{
+	skinClass: ClassReference("skins.btnStopSkin");
 }
-Button.stopBtn{
-	upSkin: Embed("../assets/btn_stop_up.png");
-	downSkin: Embed("../assets/btn_stop_down.png");
-	overSkin: Embed("../assets/btn_stop_down.png");
-	disabledSkin: Embed("../assets/btn_stop_up.png");
+s|Button.fsBtn{
+	skinClass: ClassReference("skins.btnFullScreenSkin");
 }
-Button.fsBtn{
-	upSkin: Embed("../assets/btn_fs_up.png");
-	downSkin: Embed("../assets/btn_fs_down.png");
-	overSkin: Embed("../assets/btn_fs_down.png");
+s|Button.ssBtn{
+	skinClass: ClassReference("skins.btnSmallScreenSkin");
 }
-Button.ssBtn{
-	upSkin: Embed("../assets/btn_ss_up.png");
-	downSkin: Embed("../assets/btn_ss_down.png");
-	overSkin: Embed("../assets/btn_ss_down.png");
+s|Button.cfgBtn{
+	skinClass: ClassReference("skins.btnSidebarOnSkin");
 }
-Button.cfgBtn{
-	upSkin: Embed("../assets/btn_cfg_up.png");
-	downSkin: Embed("../assets/btn_cfg_down.png");
-	overSkin: Embed("../assets/btn_cfg_down.png");
+s|Button.cfgSBtn{
+	skinClass: ClassReference("skins.btnSidebarOffSkin");
 }
-Button.cfgSBtn{
-	upSkin: Embed("../assets/btn_cfgS_up.png");
-	downSkin: Embed("../assets/btn_cfgS_down.png");
-	overSkin: Embed("../assets/btn_cfgS_down.png");
+s|Button.volume{
+	skinClass: ClassReference("skins.btnVolumeSkin");
 }
-Button.volume{
-	upSkin: Embed("../assets/btn_sound_up.png");
-	downSkin: Embed("../assets/btn_sound_down.png");
-	overSkin: Embed("../assets/btn_sound_down.png");
+s|Button.muted{
+	skinClass: ClassReference("skins.btnMuteSkin");
 }
-Button.muted{
-	upSkin: Embed("../assets/btn_sound_mute_up.png");
-	downSkin: Embed("../assets/btn_sound_mute_down.png");
-	overSkin: Embed("../assets/btn_sound_mute_down.png");
+s|Button.cmntOn{
+	skinClass: ClassReference("skins.btnCommentOnSkin");
 }
-Button.cmntOn{
-	upSkin: Embed("../assets/btn_dmk_up.png");
-	downSkin: Embed("../assets/btn_dmk_down.png");
-	overSkin: Embed("../assets/btn_dmk_down.png");
+s|Button.cmntOff{
+	skinClass: ClassReference("skins.btnCommentOffSkin");
 }
-Button.cmntOff{
-	upSkin: Embed("../assets/btn_dmk_off_up.png");
-	downSkin: Embed("../assets/btn_dmk_off_down.png");
-	overSkin: Embed("../assets/btn_dmk_off_down.png");
-}
-Canvas.Bar{
-	background-image: Embed("../assets/bar.png");
-	background-size: "100%";
-}
-/*Styling The List*/
-TabNavigator {
-    backgroundColor: #000;
-    cornerRadius: 0;
-    tabStyleName: "TbDlgTab";
-    selectedTabTextStyleName: "TbDlgSelected";
-}
-.TbDlgTab{
-	backgroundColor: black;
-	cornerRadius: 0;
-	color: #eee;
-	textRollOverColor: haloBlue;
-	fillColors:black,black;
-}
-.TbDlgSelected{
-	backgroundColor: #fff;
-	color: #fff;
-    textRollOverColor: haloBlue;
+s|SkinnableComponent.Bar{
+	skinClass: ClassReference("skins.containerBar");
 }

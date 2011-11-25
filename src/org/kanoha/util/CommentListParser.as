@@ -25,6 +25,9 @@ package org.kanoha.util
 				obj.color = uint(p[3]);
 				obj.mode = uint(p[1]);
 				obj.date = new Date(p[4] * 1000);
+				obj.timestamp = int(p[4]);
+				obj.pool = uint(p[5]);
+				obj.hash = p[6];
 				obj.border = false;
 				obj.id  = id ++;
 				if(obj.mode<7){
@@ -42,10 +45,18 @@ package org.kanoha.util
 								obj.rZ = Number(json[5]);
 								obj.rY = Number(json[6]);
 							}
-							obj.adv = false;
+							obj.movable = false;
 							//insert advanced mode here
 							if(json.length >=11){
-								trace('Advanced mode! Movable!');
+								obj.movable = true;
+								obj.toX = Number(json[7]);
+								obj.toY = Number(json[8]);
+								obj.moveDuration = 500;
+								obj.moveDelay = 0;
+								if(json[9]!='')
+									obj.moveDuration = Number(json[9]);
+								if(json[10]!='')
+									obj.moveDelay = Number(json[10]);
 							}
 							obj.duration = 2.5;
 							if(json[3] < 12 && json[3] != 1){

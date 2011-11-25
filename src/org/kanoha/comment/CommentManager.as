@@ -1,16 +1,22 @@
 package org.kanoha.comment
 {
 	import mx.core.UIComponent;
-	import mx.effects.Fade;
-	import mx.effects.Move;
-	import mx.effects.easing.*;
 	import mx.events.EffectEvent;
 	import mx.events.ResizeEvent;
+	
+	import org.kanoha.comment.effects.TimelineEffect;
+	
+	import spark.effects.Fade;
+	import spark.effects.Move;
+	import spark.effects.easing.*;
+	import spark.effects.easing.Linear;
+
 	/**
 	* CommentManager 弹幕时间轴管理器
 	* 负责管理弹幕的播放与暂停
 	* 实现参考 @aristotle9 org.lala.comments.CommentManager
 	* Mod .C
+	* Version 2 - "Sparked"
 	**/
 	public class CommentManager
 	{
@@ -40,7 +46,7 @@ package org.kanoha.comment
 			this.salloc_top = new CommentSpaceAllocator();
 			this.salloc_scroll = new ScrollCommentSpaceAllocator();
 			this.salloc_bottom = new BottomCommentSpaceAllocator();
-			var self:CommentManager = CommentManager(this);
+			//var self:CommentManager = CommentManager(this);
 			this._$container.addEventListener(ResizeEvent.RESIZE,function():void{
 				salloc_top.setBounds(_$container.width,_$container.height);
 				salloc_scroll.setBounds(_$container.width,_$container.height);
@@ -53,6 +59,7 @@ package org.kanoha.comment
 		}
 		public function set provider(data:Array):void{
 			this._$list = data;
+			this._$list.sortOn("timestamp",2|16);
 			this._$list.sortOn("stime",16);
 			this.timeline = this._$list;
 		}
@@ -80,11 +87,11 @@ package org.kanoha.comment
 					}
 				}
 			}
+			//this.clearContainer();
 		}
 		public function clearContainer():void{
-			//clears container
 			while(this._$container.numChildren>0){
-					this._$container.removeChildAt(0);
+				this._$container.removeChildAt(0);
 			}
 		}
 		public function pause():void{
@@ -138,7 +145,6 @@ package org.kanoha.comment
 			if(p <= this.position){
 				this.position++;//inserted before so bump position up
 			}
-			//flush_prepare();
 		}
 		protected function start(data:Object):void{
 			if(data.mode >= 6 && !this._$handleAdv){
@@ -159,10 +165,10 @@ package org.kanoha.comment
 			if(!this._$handleAdv){
 				if(data.mode<4){
 					var eff:Move = new Move(cmt);
-					eff.easingFunction = Linear.easeNone;
+					eff.easer = new Linear(0,0);
 					eff.duration = 4000;
 					eff.xFrom = _$container.width;
-					eff.xTo = 0 - cmt.textWidth;
+					eff.xTo = 0 - cmt.width;
 					cmt.effect = eff;
 					cmt.effect.play();
 				}else if(data.mode==4 || data.mode==5){
@@ -177,17 +183,35 @@ package org.kanoha.comment
 				}
 			}else{
 				if(data.mode==7 && this._$handleAdv){
-					var advFade:Fade = new Fade(cmt);
-					advFade.alphaTo = data.outAlpha;
-					advFade.alphaFrom = data.inAlpha;
-					advFade.duration = data.duration * 1000;
-					cmt.effect = advFade;
-					cmt.effect.play();
+					if(data.movable == false){
+						var advFade:Fade = new Fade(cmt);
+						advFade.alphaTo = data.outAlpha;
+						advFade.alphaFrom = data.inAlpha;
+						advFade.duration = data.duration * 1000;
+						cmt.effect = advFade;
+						cmt.effect.play();
+					}else{
+						trace("New Movable type Effect: " + data.toX + " " + data.toY + " DUR:" + data.moveDuration + " Delay:" + data.moveDelay);
+						var advEvt:TimelineEffect = new TimelineEffect();
+						var advFade2:Fade = new Fade(cmt);
+						advFade2.alphaTo = data.outAlpha;
+						advFade2.alphaFrom = data.inAlpha;
+						advFade2.duration = data.duration * 1000;
+						var advMove:Move = new Move(cmt);
+						advMove.xTo = data.toX;
+						advMove.yTo = data.toY;
+						advMove.startDelay = data.moveDelay;
+						advMove.duration = data.moveDuration;
+						advEvt.addEffect(advFade2);
+						advEvt.addEffect(advMove);
+						cmt.effect = advEvt;
+						cmt.effect.play();
+					}
 				}else if(data.mode==6 && this._$handleAdv){
 					var effc:Move = new Move(cmt);
-					effc.easingFunction = Linear.easeNone;
+					effc.easer = new Linear(0,0);
 					effc.duration = 4000;
-					effc.xFrom = 0 - cmt.textWidth;
+					effc.xFrom = 0 - cmt.width;
 					effc.xTo = _$container.width;
 					cmt.effect = effc;
 					cmt.effect.play();
@@ -198,32 +222,34 @@ package org.kanoha.comment
 					self.complete(cmt);
 					self.deallocSpace(cmt);
 					self._$container.removeChild(cmt);
+					cmt = null;
 				});
 			}else{
-				self.complete(cmt);
-				self.deallocSpace(cmt);
-				self._$container.removeChild(cmt);
+				this.complete(cmt);
+				this.deallocSpace(cmt);
+				this._$container.removeChild(cmt);
+				cmt = null;//Free up space for comment
 				return;//unhandled comments need not be pushed into run stack!
 				//unhandled comment!;
 			}
 			this.prepare_stack.push(cmt);
 		}
-		protected function allocSpace(comment:Comment):void{
-			if(comment.dataObject.mode<4){
-				this.salloc_scroll.add(comment);
-			}else if(comment.dataObject.mode==5){
-				this.salloc_top.add(comment);
-			}else if(comment.dataObject.mode==4){
-				this.salloc_bottom.add(comment);
+		protected function allocSpace(cm:Comment):void{
+			if(cm.dataObject.mode<4){
+				this.salloc_scroll.add(cm);
+			}else if(cm.dataObject.mode==5){
+				this.salloc_top.add(cm);
+			}else if(cm.dataObject.mode==4){
+				this.salloc_bottom.add(cm);
 			}
 		}
-		protected function deallocSpace(comment:Comment):void{
-			if(comment.dataObject.mode<4){
-				this.salloc_scroll.remove(comment);
-			}else if(comment.dataObject.mode==5){
-				this.salloc_top.remove(comment);
-			}else if(comment.dataObject.mode==4){
-				this.salloc_bottom.remove(comment);
+		protected function deallocSpace(cm:Comment):void{
+			if(cm.dataObject.mode<4){
+				this.salloc_scroll.remove(cm);
+			}else if(cm.dataObject.mode==5){
+				this.salloc_top.remove(cm);
+			}else if(cm.dataObject.mode==4){
+				this.salloc_bottom.remove(cm);
 			}
 		}
 		protected function getComment(data:Object):Comment{
