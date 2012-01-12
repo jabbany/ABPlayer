@@ -65,7 +65,7 @@
 			}else{
 				//loadVideo("sina","56216390",'http://www.bilibili.tv/dm,56216390');
 				//loadVideo("file","http://192.168.1.2/share/2.hlv","http://192.168.1.2/share/comment.xml");
-				loadVideo("file","http://192.168.1.2/share/rokubunnoichi.flv",'http://192.168.1.2/share/rokubunnoichi.xml');
+				loadVideo("file","https://railgun.in/share/rokubunnoichi.flv",'https://railgun.in/share/rokubunnoichi.xml');
 			}
 			if(FlexGlobals.topLevelApplication.parameters.send!=null)
 				cs.url = FlexGlobals.topLevelApplication.parameters.send;
