@@ -1,3 +1,2 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<flexProperties enableServiceManager="false" flexServerFeatures="0" flexServerType="16" serverContextRoot="" serverRoot="//cxl-PC/htdocs" serverRootURL="http://192.168.1.2/" toolCompile="true" useServerFlexSDK="false" version="1"/>
-
+<flexProperties enableServiceManager="false" flexServerFeatures="0" flexServerType="16" serverContextRoot="" serverRoot="E:/webroot/htdocs" serverRootURL="http://127.0.0.1/" toolCompile="true" useServerFlexSDK="false" version="1"/>
