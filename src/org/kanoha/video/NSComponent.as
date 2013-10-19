@@ -48,7 +48,7 @@ package org.kanoha.video
 		public function resize(eve:Event):void
 		{
 			if(this._$video==null)
-				return;//dont resize if video not init'd
+				return;//dont resize if video not inited
 			if(this.p_x<=0 || this.p_y<=0){
 				this._$video.width = this.width;
 				this._$video.height = this.height;
