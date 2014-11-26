@@ -29,12 +29,12 @@
 		<link>
 			<name>bin-debug</name>
 			<type>2</type>
-			<location>//cxl-PC/htdocs/ABPlayer</location>
+			<location>C:/www/ABPlayer</location>
 		</link>
 		<link>
 			<name>bin-release</name>
 			<type>2</type>
-			<location>//cxl-PC/htdocs/ABPlayer</location>
+			<location>C:/www/ABPlayer</location>
 		</link>
 	</linkedResources>
 </projectDescription>

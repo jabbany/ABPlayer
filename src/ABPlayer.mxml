@@ -442,13 +442,16 @@
 		</mx:ArrayCollection>
 		<fx:Boolean id="sidebarShow">true</fx:Boolean>
 		<fx:Boolean id="updatePosition">true</fx:Boolean>
-		<s:RadioButtonGroup id="CmntExtra" change="cmSettings.setGlow(String(CmntExtra.selectedValue));"/>
+		<s:RadioButtonGroup id="CmntExtra"
+							change="cmSettings.setGlow(String(CmntExtra.selectedValue));"/>
 	</fx:Declarations>
 	<mx:Canvas id="ABPVideoWrapper" left="0" right="350" top="0" bottom="70" click="togglePlay();"
 			   horizontalScrollPolicy="off" styleName="videoWrapper" verticalScrollPolicy="off">
 		<local:NSComponent id="ABPVideo" left="0" right="0" top="0" bottom="0" smoothing="true"/>	
-		<mx:Canvas verticalScrollPolicy="off" horizontalScrollPolicy="off" id="commentStage1" left="0" right="0" top="0" bottom="0"/>
-		<mx:Canvas verticalScrollPolicy="off" horizontalScrollPolicy="off" id="commentStage2" left="0" right="0" top="0" bottom="0"/>
+		<mx:Canvas id="commentStage1" left="0" right="0" top="0" bottom="0"
+				   horizontalScrollPolicy="off" verticalScrollPolicy="off"/>
+		<mx:Canvas id="commentStage2" left="0" right="0" top="0" bottom="0"
+				   horizontalScrollPolicy="off" verticalScrollPolicy="off"/>
 		<mx:HRule id="AdvHRule" visible="false" width="100%" height="1" horizontalCenter="0"
 				  strokeColor="#1FF91F" verticalCenter="0"/>
 		<mx:VRule id="AdvVRule" visible="false" width="1" height="100%" horizontalCenter="0"
@@ -458,50 +461,50 @@
 				   verticalScrollPolicy="off">
 			<s:Label left="10" top="10" color="#FFFFFF" text="视频解析度"/>
 			<s:Label id="infoLblProportions" left="83" right="10" top="10" color="#FFFFFF"
-					  text="0 x 0"/>
+					 text="0 x 0"/>
 			<s:Label left="10" top="41" color="#FFFFFF" text="当前视频文件大小"/>
 			<s:Label id="infoLblFilesize" left="119" right="10" top="41" color="#FFFFFF"
-					  text="0 bytes"/>
+					 text="0 bytes"/>
 		</mx:Canvas>
 	</mx:Canvas>
 	<s:Group id="ABPController" left="0" right="0" bottom="0" height="40">
 		<s:Button id="btnPlay" left="0" bottom="0" click="togglePlay();" enabled="false"
-				   styleName="playBtn" toolTip="播放/暂停"/>
+				  styleName="playBtn" toolTip="播放/暂停"/>
 		<s:Button id="btnStop" left="50" bottom="0" click="this.ABPVideo.stop();" enabled="false"
-				   styleName="stopBtn" toolTip="停止"/>
+				  styleName="stopBtn" toolTip="停止"/>
 		<s:Button id="btnFullScreen" right="0" bottom="0" click="toggleFullscreen(!isFullscreen);"
-				   styleName="fsBtn" toolTip="全屏幕"/>
+				  styleName="fsBtn" toolTip="全屏幕"/>
 		<s:Button id="btnConfig" right="30" bottom="0"
-				   click="toggleSidebar(!sidebarOverlay.visible);" styleName="cfgSBtn"
-				   toolTip="设置弹幕"/>
+				  click="toggleSidebar(!sidebarOverlay.visible);" styleName="cfgSBtn" toolTip="设置弹幕"/>
 		<s:SkinnableContainer left="80" right="120" bottom="0" height="25" styleName="Bar">
 			<s:Label id="currentTime" left="5" text="00:00 / 00:00" verticalCenter="0"/>
 		</s:SkinnableContainer>
 		<s:Button id="btnVolume" right="60" bottom="0" styleName="volume" toolTip="音量"/>
 		<s:Button id="btnCmnt" right="90" bottom="0" click="toggleCmnt();" styleName="cmntOn"
-				   toolTip="开启/关闭弹幕"/>
+				  toolTip="开启/关闭弹幕"/>
 		<s:HSlider id="ABPTrack" left="10" right="10" top="2" height="10"
-					dataTipFormatFunction="formatDataTip" mouseDown="updatePosition=false"
-					mouseUp="ABPVideo.seek(ABPTrack.value);updatePosition=true;"/>
+				   dataTipFormatFunction="formatDataTip" mouseDown="updatePosition=false"
+				   mouseUp="ABPVideo.seek(ABPTrack.value);updatePosition=true;"/>
 	</s:Group>
 	<s:Group id="sidebarOverlay" right="0" top="0" bottom="40" width="350">
 		<mx:TabNavigator id="ABPSidebar" left="0" right="0" top="0" bottom="0">
 			<s:NavigatorContent id="frmCmntList" width="100%" height="100%" label="评论列表">
 				<s:DataGrid id="CommentListGrid" left="0" right="0" top="0" bottom="0"
-							 dataProvider="{UICommentList}" doubleClick="onListDblClick(event);"
-							 doubleClickEnabled="true">
+							dataProvider="{UICommentList}" doubleClick="onListDblClick(event);"
+							doubleClickEnabled="true">
 					<s:columns>
 						<s:ArrayList>
 							<s:GridColumn width="40" dataField="stime" headerText="时间"
-											   labelFunction="formatTime"/>
+										  labelFunction="formatTime"/>
 							<s:GridColumn dataField="text" headerText="内容"/>
 							<s:GridColumn width="100" dataField="date" headerText="发送时间"
-											   labelFunction="formatDate"/>
+										  labelFunction="formatDate"/>
 						</s:ArrayList>
 					</s:columns>
 				</s:DataGrid>
 			</s:NavigatorContent>
-			<s:NavigatorContent id="frmSpecial" width="100%" height="100%" label="高级弹幕" enabled="false">
+			<s:NavigatorContent id="frmSpecial" width="100%" height="100%" label="高级弹幕"
+								enabled="false">
 				<mx:Accordion id="AdvancedCmnt" left="0" right="0" top="0" bottom="0"
 							  selectedIndex="0">
 					<s:NavigatorContent id="CmntAdvPosition" width="100%" height="100%" label="定位弹幕">
@@ -510,7 +513,7 @@
 					<s:NavigatorContent width="100%" height="100%" label="绘图弹幕">
 						<s:Label left="10" top="6" text="脚本绘图"/>
 						<s:TextArea id="CmntAdvDraw" left="10" right="10" top="31" bottom="43"
-									 editable="true" enabled="true" text="//这里是脚本"/>
+									editable="true" enabled="true" text="//这里是脚本"/>
 						<s:Button id="CmntAdvTest" right="10" bottom="8" label="测试运行"/>
 					</s:NavigatorContent>
 					<s:NavigatorContent width="100%" height="100%" label="点阵图片弹幕">
@@ -521,15 +524,15 @@
 				<mx:Accordion left="0" right="0" top="0" bottom="0">
 					<s:NavigatorContent width="100%" height="100%" label="播放器设置">
 						<s:HSlider id="CmntTransparency" left="10" right="10" top="30"
-									change="cmSettings.setStyle('alpha',CmntTransparency.value);"
-									enabled="true" maximum="1.0" minimum="0.0" snapInterval="0.1"
-									value="1.0"/>
+								   change="cmSettings.setStyle('alpha',CmntTransparency.value);"
+								   enabled="true" maximum="1.0" minimum="0.0" snapInterval="0.1"
+								   value="1.0"/>
 						<s:Label left="10" top="10" text="弹幕透明度"/>
 						<s:CheckBox id="abpToggleDebug" left="10" top="56" label="显示视频调试信息"
-									 click="ABPVideoInfo.visible =abpToggleDebug.selected;"/>
+									click="ABPVideoInfo.visible =abpToggleDebug.selected;"/>
 						<s:DropDownList id="CmntFont" left="71" right="10" top="87"
-									 change="cmSettings.setStyle('font',CmntFont.selectedItem.data);"
-									 enabled="true" selectedIndex="2">
+										change="cmSettings.setStyle('font',CmntFont.selectedItem.data);"
+										enabled="true" selectedIndex="2">
 							<mx:ArrayCollection>
 								<fx:Object label="黑体" data="simhei"/>
 								<fx:Object label="微软雅黑" data="Microsoft Yahei"/>
@@ -538,27 +541,27 @@
 						</s:DropDownList>
 						<s:Label left="10" top="89" text="弹幕字体"/>
 						<s:Button id="btnReloadComments" right="10" top="56" label="重新载入弹幕列表"
-								   click="cl.reload();" toolTip="强制重新载入所有弹幕"/>
+								  click="cl.reload();" toolTip="强制重新载入所有弹幕"/>
 						<s:CheckBox id="CmntBold" left="10" top="120" label="弹幕加粗"
-									 click="cmSettings.setStyle('bold',CmntBold.selected);"
-									 enabled="true" selected="true"/>
+									click="cmSettings.setStyle('bold',CmntBold.selected);"
+									enabled="true" selected="true"/>
 						
 						<s:RadioButton id="CmntGlow" left="91" top="120" label="文字阴影"
-										groupName="CmntExtra" selected="false" value="highlight"/>
+									   groupName="CmntExtra" selected="false" value="highlight"/>
 						<s:RadioButton id="CmntShadow" left="172" top="120" label="文字描边"
-										groupName="CmntExtra" selected="true" value="border"/>
+									   groupName="CmntExtra" selected="true" value="border"/>
 						<s:RadioButton id="CmntNone" left="253" top="120" label="无"
-										groupName="CmntExtra" value="none"/>
+									   groupName="CmntExtra" value="none"/>
 						<s:CheckBox id="cfgCPUfriendly" left="10" top="155" label="请对CPU善良些"
-									 click="toggleCPUMode();" toolTip="限制同时显示的弹幕数目"/>
+									click="toggleCPUMode();" toolTip="限制同时显示的弹幕数目"/>
 						<s:CheckBox id="cfgAvoidSubs" left="127" top="155" label="躲开内嵌字幕"
-									 click="toggleHardSubtitle();" toolTip="视频底部向上30像素内弹幕绕行通过"/>
+									click="toggleHardSubtitle();" toolTip="视频底部向上30像素内弹幕绕行通过"/>
 						<s:CheckBox id="showVideo" left="10" top="190" label="显示视频"
-									 click="ABPVideo.visible=showVideo.selected;" selected="true"
-									 toolTip="关闭视频部分，减少处理器压力"/>
+									click="ABPVideo.visible=showVideo.selected;" selected="true"
+									toolTip="关闭视频部分，减少处理器压力"/>
 						<s:DropDownList id="videoFilter" left="91" right="10" top="189"
-									 change="ABPVideo.filterMode=String(videoFilter.selectedItem.data);"
-									 enabled="true" selectedIndex="0">
+										change="ABPVideo.filterMode=String(videoFilter.selectedItem.data);"
+										enabled="true" selectedIndex="0">
 							<mx:ArrayCollection>
 								<fx:Object label="无优化" data="default"/>
 								<fx:Object label="增加对比度" data="contrastup"/>
@@ -570,56 +573,59 @@
 							</mx:ArrayCollection>
 						</s:DropDownList>
 						<s:CheckBox id="videoQuality" left="232" top="155" label="高画质"
-									 click="ABPVideo.smoothing = videoQuality.selected;"
-									 selected="true" toolTip="一些高清视频关闭高画质可以减少处理器负荷同时提高画质"/>
+									click="ABPVideo.smoothing = videoQuality.selected;"
+									selected="true" toolTip="一些高清视频关闭高画质可以减少处理器负荷同时提高画质"/>
 					</s:NavigatorContent>
 					<s:NavigatorContent width="100%" height="100%" label="屏蔽设置">
 						<s:CheckBox id="CmntShowScroll" left="10" top="10" label="滚动弹幕"
-									 click="filterMgr.filterMode(1,CmntShowScroll.selected);"
-									 enabled="true" selected="true"/>
+									click="filterMgr.filterMode(1,CmntShowScroll.selected);"
+									enabled="true" selected="true"/>
 						<s:CheckBox id="CmntShowReverse" left="10" top="29" label="逆向弹幕"
-									 click="filterMgr.filterMode(6,CmntShowReverse.selected);"
-									 enabled="true" selected="true"/>
+									click="filterMgr.filterMode(6,CmntShowReverse.selected);"
+									enabled="true" selected="true"/>
 						<s:CheckBox id="CmntShowTop" top="10" label="顶部弹幕"
-									 click="filterMgr.filterMode(5,CmntShowTop.selected);"
-									 enabled="true" horizontalCenter="0" selected="true"/>
+									click="filterMgr.filterMode(5,CmntShowTop.selected);"
+									enabled="true" horizontalCenter="0" selected="true"/>
 						<s:CheckBox id="CmntShowBottom" top="29" label="底部弹幕"
-									 click="filterMgr.filterMode(4,CmntShowBottom.selected);"
-									 enabled="true" horizontalCenter="0" selected="true"/>
+									click="filterMgr.filterMode(4,CmntShowBottom.selected);"
+									enabled="true" horizontalCenter="0" selected="true"/>
 						<s:CheckBox id="CmntShowCaptioning" right="10" top="10" label="字幕弹幕"
-									 click="filterMgr.filterMode(8,CmntShowCaptioning.selected);"
-									 enabled="true" selected="true"/>
+									click="filterMgr.filterMode(8,CmntShowCaptioning.selected);"
+									enabled="true" selected="true"/>
 						<s:CheckBox id="CmntShowPositioned" right="10" top="30" label="定位弹幕"
-									 click="filterMgr.filterMode(7,CmntShowPositioned.selected);"
-									 selected="true"/>
-						<mx:HRule  left="10" right="10" top="59"/>
+									click="filterMgr.filterMode(7,CmntShowPositioned.selected);"
+									selected="true"/>
+						<mx:HRule left="10" right="10" top="59"/>
 						<s:CheckBox id="CmntFilterRemote" left="10" top="69" label="使用远程载入规则"
-									 enabled="true" selected="true"/>
+									enabled="true" selected="true"/>
 						<s:TextInput id="filterDef" left="10" right="123" top="104"/>
 						<s:List id="lstRule" left="11" right="10" top="139" bottom="33"
-								 dataProvider="{UIFilterList}" selectedIndex="0">
+								dataProvider="{UIFilterList}" selectedIndex="0">
 							<s:itemRenderer>
 								<fx:Component>
 									<s:ItemRenderer>
 										<s:states>
-											<s:State name="normal" />
-											<s:State name="hovered" />
-											<s:State name="selected" />
+											<s:State name="normal"/>
+											<s:State name="hovered"/>
+											<s:State name="selected"/>
 										</s:states>
 
-										<s:Label id="filterLabel" text="{data.filter}" top="5" left="5" right="5" bottom="5"/>
+										<s:Label id="filterLabel" left="5" right="5" top="5"
+												 bottom="5" text="{data.filter}"/>
 									</s:ItemRenderer>
 								</fx:Component>
 							</s:itemRenderer>
 						</s:List>
 						<s:Button id="btnSaveFilter" right="10" top="69" label="保存过滤器规则"/>
 						<s:CheckBox id="CmntAutoblock" left="11" bottom="10" label="智能阻止刷屏"/>
-						<s:Button id="btnAddRule" right="66" top="104" width="50" label="添加" click="fltaddFilter(filterDef.text);"/>
-						<s:Button id="btnDelRule" right="10" top="104" width="50" label="删除" click="deleteFilter();"/>
+						<s:Button id="btnAddRule" right="66" top="104" width="50" label="添加"
+								  click="fltaddFilter(filterDef.text);"/>
+						<s:Button id="btnDelRule" right="10" top="104" width="50" label="删除"
+								  click="deleteFilter();"/>
 					</s:NavigatorContent>
 					<s:NavigatorContent width="100%" height="100%" label="关于播放器">
 						<s:Label left="10" right="10" top="10" fontWeight="bold"
-								  text="ABPlayer 弹幕播放器 (Spark)" textDecoration="underline"/>
+								 text="ABPlayer 弹幕播放器 (Spark)" textDecoration="underline"/>
 						<s:Label left="10" right="10" top="32" text="版本：1.0.11 (Yasai Build 13)"/>
 						<s:Label left="10" right="10" top="53" text="作者：Jabbany (CQZ) @ Kanoha.org"/>
 					</s:NavigatorContent>
@@ -637,13 +643,12 @@
 			</s:NavigatorContent>
 		</mx:TabNavigator>
 	</s:Group>
-	<s:Group id="ABPCommentform" left="0" right="350" bottom="40" height="30"
-			   enabled="false" styleName="Bar">
+	<s:Group id="ABPCommentform" left="0" right="350" bottom="40" height="30" enabled="false"
+			 styleName="Bar">
 		<s:Button id="CmntSend" right="4" width="63" height="25" label="发送..." click="cmntSend();"
-				   styleName="dmButton" verticalCenter="0"/>
+				  styleName="dmButton" verticalCenter="0"/>
 		<s:DropDownList id="CmntType" left="4" width="96" height="25" change="onCommentTypeChange();"
-					  enabled="true" selectedIndex="0"
-					 styleName="dmCombo" verticalCenter="0">
+						enabled="true" selectedIndex="0" styleName="dmCombo" verticalCenter="0">
 			<mx:ArrayCollection>
 				<fx:Object label="滚动" data="1"/>
 				<fx:Object label="顶部" data="5"/>
@@ -656,9 +661,9 @@
 		<mx:ColorPicker id="CmntColor" left="104" width="25" height="25" enabled="true"
 						selectedColor="#FFFFFF" verticalCenter="0"/>
 		<s:TextInput id="CmntText" left="200" right="70" height="25"
-					  keyDown="onCommentformKey(event);" verticalCenter="0"/>
-		<s:DropDownList id="CmntSize" left="134" width="62" height="25" enabled="true" 
-					 selectedIndex="2" verticalCenter="0">
+					 keyDown="onCommentformKey(event);" verticalCenter="0"/>
+		<s:DropDownList id="CmntSize" left="134" width="62" height="25" enabled="true"
+						selectedIndex="2" verticalCenter="0">
 			<mx:ArrayCollection>
 				<fx:Object label="特大" data="35"/>
 				<fx:Object label="大" data="30"/>
