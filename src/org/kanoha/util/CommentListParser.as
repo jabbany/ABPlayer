@@ -1,6 +1,5 @@
 package org.kanoha.util
 {
-	import com.adobe.serialization.json.JSON;
 	public class CommentListParser
 	{
 		public function CommentListParser()
@@ -35,7 +34,7 @@ package org.kanoha.util
 				}else{
 					if(obj.mode==7){
 						try{
-							var json:Object = JSON.decode(text,false);
+							var json:Object = JSON.parse(text);
 							obj.x = Number(json[0]);
 							obj.y = Number(json[1]);
 							obj.text = String(json[4]).replace(/(\/n|\\n|\n|\r\n)/g, "\r");
